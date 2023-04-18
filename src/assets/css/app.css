@@ -1,0 +1,42 @@
+h1 { font-size: 15x;
+    color:#621132;
+    background: #b38e5d
+}
+
+
+
+.distUnidadturno{
+   
+    display: inline;
+    margin: auto;
+    justify-content: center;
+    background: #b38e5d
+   
+               
+                }
+
+.distUnidadRama{
+   
+    display: inline;
+    margin: auto;
+    justify-content: center;
+    background: #b38e5d
+                  
+                }
+
+.distAdscripcionTurno{
+    
+    display: inline;
+    margin: auto;
+    justify-content: center;
+    background: #b38e5d
+                  
+                }
+
+.xx{width: 25%;
+    display: inline-block;
+    margin: auto;
+    justify-content: center;
+    background: #b38e5d
+
+}

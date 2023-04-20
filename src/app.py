@@ -11,6 +11,7 @@ from func_crea_Graficos import crear_grafico_pie
 from func_crea_tablas_simple import create_table_simple
 from decorador_Grafico import *
 import decorador_dropdown
+from func_crea_tabla_comparativa import crear_tabla_comparativa
 
 
 import dash_auth
@@ -129,8 +130,7 @@ Input(component_id='seleccionaUnidad', component_property='value')
 )
 
 def update_table(seleccionaUnidad):
- 
-      
+       
      dffTabla2 = df[df['UNIDAD']==(seleccionaUnidad)]
     
      dffTabla2= dffTabla2.groupby(['TURNO']).size().reset_index(name='EN_PLANTILLA')
@@ -140,13 +140,9 @@ def update_table(seleccionaUnidad):
 
     # Agrega una fila al final de la tabla con el total
      dffTabla2 = dffTabla2.append({'TURNO': 'TOTAL', 'EN_PLANTILLA': TOTAL}, ignore_index=True)
-
-
-    
+   
      return dffTabla2.to_dict('records')
    
-
-
 
 #------------decorador tabla por Unidad rama ----------------
 @app.callback(
@@ -320,9 +316,7 @@ app.layout = html.Div([
                 html.H4('QNA 6/2023'),
                 html.Hr() ]
         ),
-
-         
-               
+    
 #--------------------------tabla global secretaria----------------------------        
         html.Div(children=[
             html.Label('Distribucion Global:', className='etiqueta'),
@@ -395,82 +389,7 @@ html.Div([
    html.Hr(),
 html.Label('Comparación de Normativa VS Plantilla:', className='etiqueta'),
  # tabla nucleos
-dash_table.DataTable(
-        id='table1X',
-        #data = dffTabla1.to_dict('records'),
-        columns = [{'id':c, 'name':c} for c in 
-                   df.loc[:,['ADSCRIPCION','TURNO','EN_PLANTILLA','NORMATIVA']]],
-           #virtualization=True,
-             row_selectable='multi',
-                style_data={
-               # 'color':  '#b38e5d',
-                'color':  '#ffffff',
-                'backgroundColor':'#621132'
-            },
-            fixed_rows = {'headers':True},
-
-            style_table = {'maxHeight':'450px',
-                          'backgroundColor':'#621132',
-                         #  'color':  '#b38e5d'},
-                           'color':  '#ffffff'},
-
-            style_header = {'backgroundColor':'#000000',
-                            'fontWeight':'bold',
-                            'border':'4px solid white',
-                            'textAlign':'center'},
-
-            style_data_conditional = [
-                     {
-                'if': {
-                    'filter_query': '{EN_PLANTILLA}  > {NORMATIVA}' ,
-                    'column_id': 'EN_PLANTILLA'
-                },
-                'color': 'red',
-                'fontWeight': 'bold',
-                'textAlign':'center',         
-            },
-                
-                  {
-                'if': {
-                    'filter_query': '{EN_PLANTILLA}  < {NORMATIVA}' ,
-                    'column_id': 'EN_PLANTILLA'
-                },
-                'color': 'yellow',
-                'fontWeight': 'bold',
-                 'textAlign':'center',     
-            },
-                
-               {
-                'if': {
-                    'filter_query': '{EN_PLANTILLA}  = {NORMATIVA}' ,
-                    'column_id': 'EN_PLANTILLA'
-                },
-                'color': 'lime',
-               'fontWeight': 'bold',
-                'textAlign':'right',   
-            },
-                {
-                'if': {
-                    'filter_query': '{NORMATIVA} = {NORMATIVA}',
-                    'column_id': 'NORMATIVA'
-                },
-                'color': 'lime',
-               'fontWeight': 'bold',
-                'textAlign':'center',   
-            }  
-
-              ],
-
-            style_cell = {
-                'textAlign':'left',
-                'border':'4px solid white',
-                 'color':'#b38e5d',
-                 
-                'maxWidth':'50px',
-                # 'whiteSpace':'normal'
-                'textOverflow':'ellipsis'
-
-                }),
+    crear_tabla_comparativa(df),
 
 html.Label('Analítico por Trabajador:', className='etiqueta'),              
 # tabla POR PERSONAS

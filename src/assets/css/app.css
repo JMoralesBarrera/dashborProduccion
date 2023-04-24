@@ -1,26 +1,75 @@
-h1 { font-size: 15x;
-    color:#621132;
-    background: #b38e5d
+
+* Importación de Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
+
+/* Uso de la fuente Montserrat en tu código CSS */
+body {
+  font-family: 'Montserrat', sans-serif;
 }
 
+/* Otros estilos con Montserrat */
+h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  font-size: 32px;
+  color:#621132;
+  /*background: #b38e5d;*/
+}
 
+h4 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  font-size: 20px;
+  color:#621132;
+ 
+}
+
+#marquee{ 
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    font-size: 20px;
+    color:#621132;}
+
+.etiqueta {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    font-size: 15px;
+    color:#621132;}
+
+#seleccionaUnidad {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    font-size: 15px;
+    background: #b38e5d;
+    color:#621132;
+}
+
+#seleccionaUnidades{
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    font-size: 15px;
+    background: #b38e5d;
+    color:#621132;
+}
 
 .distUnidadturno{
    
     display: inline;
     margin: auto;
     justify-content: center;
-    background: #b38e5d
-   
-               
-                }
+    background: #b38e5d;
+    font-family: 'Montserrat', sans-serif;
+          }
+
+
 
 .distUnidadRama{
    
     display: inline;
     margin: auto;
     justify-content: center;
-    background: #b38e5d
+    background: #b38e5d;
+    font-family: 'Montserrat', sans-serif;
                   
                 }
 

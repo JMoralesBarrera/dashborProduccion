@@ -12,10 +12,7 @@ from func_crea_tablas_simple import create_table_simple
 from decorador_Grafico import *
 import decorador_dropdown
 from func_crea_tabla_comparativa import crear_tabla_comparativa
-
-
 import dash_auth
-
 
 # import dash_bootstrap_components as dbc
 LISTA_USUARIO =[['DIRECCION','A01'],['SUBDIRECCION','A02'],['JESUS','A03'],['JEFEDEPTO','A04']]
@@ -33,7 +30,6 @@ auth= dash_auth.BasicAuth(app,LISTA_USUARIO)
 df = pd.read_excel('Plantilla.xlsx', sheet_name='Resultados')
 df = df.apply(lambda x: x.str.strip() if x.dtype == 'object' else x)
 df = df[[ 'RFC', 'A.Paterno', 'A.Materno', 'Nombre', 'SUELDO TAB', 'CÓDIGO', 'ADSCRIPCION', 'Area Hosp', 'Sub_Area_Hosp', 'NUCLEOS', 'RAMA', 'UNIDAD', 'TURNO', 'EN_PLANTILLA', 'TIPO CONTRATO','NORMATIVA']]
-
 
 # Define colors for the app
 colors = {
@@ -57,7 +53,6 @@ def set_cities_options(chosen_state):
             dff = df[df['UNIDAD']==(chosen_state)]   
             return [{'label': c, 'value': c} for c in sorted(dff.ADSCRIPCION.unique())]
 
-
 #--------------- Decorador para mostrar una unidad al inicio del programa --------------------
 @app.callback(
     Output('seleccionaUnidades', 'value'),
@@ -74,117 +69,45 @@ def set_cities_options(chosen_state1):
 def set_cities_options(chosen_state1):  
     return [k['value']for k in chosen_state1 ][0]
 
- #----------------Decorador grafico global por ramas -----------------------------------------
-@app.callback(
-    Output(component_id='the_graph1', component_property='figure'),    
-    Input(component_id='seleccionaUnidad', component_property='value')    
+ #----------------Decorador gráfico -----------------------------------------
+def update_graph_pie(component_id_Output, component_id_Input, tipo ,columna_numero, columna_nombre, titulo):
+    @app.callback(
+        Output(component_id=component_id_Output, component_property='figure'),
+        Input(component_id=component_id_Input, component_property='value')
     )
-def update_graph_pie(my_dropdown):
-    return crear_grafico_pie(df, 'UNIDAD', my_dropdown,'numeroRama','RAMA','Distribución Global por Ramas')
+    def update_graph(my_dropdown):
+        return crear_grafico_pie(df, tipo, my_dropdown, columna_numero, columna_nombre, titulo)
+    return update_graph
 
-    #--------------Decorador grafico global por Turnos -----------------------------------------
-@app.callback(
-    Output(component_id='the_graphTurnos', component_property='figure'),
-    Input(component_id='seleccionaUnidad', component_property='value')      
-    )  
-def update_graph_pie(my_dropdown):
-    return crear_grafico_pie(df, 'UNIDAD', my_dropdown,'numeroTurno','TURNO','Distribución Global por Turnos')
- 
-#------------------Decorador grafico por unidad por Ramas -----------------------------------------
-@app.callback(
-    Output(component_id='theGraphUnidadRamas', component_property='figure'),
-    Input(component_id='seleccionaUnidades', component_property='value')      
-    )
-def update_graph_pie(my_dropdown):  
-    return crear_grafico_pie(df,'ADSCRIPCION', my_dropdown, 'numeroRama','RAMA','Distribución por Unidad por Ramas')
-
-#------------------Decorador grafico por unidad por Turnos -----------------------------------------
-@app.callback(
-    Output(component_id='theGraphUnidadTurnos', component_property='figure'),
-    Input(component_id='seleccionaUnidades', component_property='value')      
-    )
-def update_graph_pie(my_dropdown):   
-    return crear_grafico_pie(df,'ADSCRIPCION', my_dropdown, 'numeroTurno','TURNO','Distribución por Unidad por Turnos')
+# Uso de la función de actualización de gráfico para generar las funciones de devolución de llamada
+update_graph_pie1 = update_graph_pie('the_graphRama', 'seleccionaUnidad','UNIDAD','numeroRama', 'RAMA', 'Distribución Global por Ramas')
+update_graph_pie2 = update_graph_pie('the_graphTurnos','seleccionaUnidad', 'UNIDAD','numeroTurno', 'TURNO', 'Distribución Global por Turnos')
+update_graph_pie3 = update_graph_pie('theGraphUnidadRamas','seleccionaUnidades', 'ADSCRIPCION','numeroRama', 'RAMA', 'Distribución por Unidad  por Ramas')
+update_graph_pie4 = update_graph_pie('theGraphUnidadTurnos','seleccionaUnidades', 'ADSCRIPCION','numeroTurno', 'TURNO', 'Distribución por Unidad  por Turnos')
 
 #------------------Decorador tabla global rama---------------------
-@app.callback(
-  Output(component_id='tabla', component_property='data'),
-  Input(component_id='seleccionaUnidad', component_property='value')
+def generate_callback(component_id_output, component_id_input, component_property,tipo, groupby_column):
+    @app.callback(
+        Output(component_id=component_id_output, component_property=component_property),
+        Input(component_id=component_id_input, component_property='value')
     )
-def update_table(seleccionaUnidad):
-  dffTabla1 = df[df['UNIDAD']==(seleccionaUnidad)]
-  dffTabla1= dffTabla1.groupby(['RAMA']).size().reset_index(name='EN_PLANTILLA')
+    def update_table(seleccionaUnidad):
+        dffTabla = df[df[tipo] == seleccionaUnidad]
+        dffTabla = dffTabla.groupby([groupby_column]).size().reset_index(name='EN_PLANTILLA')
 
-  # Calcula el total de la columna 'EN_PLANTILLA'
-  TOTAL = dffTabla1['EN_PLANTILLA'].sum()
+        # Calcula el total de la columna 'EN_PLANTILLA'
+        TOTAL = dffTabla['EN_PLANTILLA'].sum()
 
-  # Agrega una fila al final de la tabla con el total
-  dffTabla1 = dffTabla1.append({'RAMA': 'TOTAL', 'EN_PLANTILLA': TOTAL}, ignore_index=True)
+        # Agrega una fila al final de la tabla con el total
+        dffTabla = dffTabla.append({groupby_column: 'TOTAL', 'EN_PLANTILLA': TOTAL}, ignore_index=True)
 
-  return dffTabla1.to_dict('records')
+        return dffTabla.to_dict('records')
 
-#---------------Decorador tabla global turno-----------------
-@app.callback(
- Output(component_id='tabla2', component_property='data'),   
-Input(component_id='seleccionaUnidad', component_property='value')    
-)
-
-def update_table(seleccionaUnidad):
-       
-     dffTabla2 = df[df['UNIDAD']==(seleccionaUnidad)]
-    
-     dffTabla2= dffTabla2.groupby(['TURNO']).size().reset_index(name='EN_PLANTILLA')
-    
-     # Calcula el total de la columna 'EN_PLANTILLA'
-     TOTAL = dffTabla2['EN_PLANTILLA'].sum()
-
-    # Agrega una fila al final de la tabla con el total
-     dffTabla2 = dffTabla2.append({'TURNO': 'TOTAL', 'EN_PLANTILLA': TOTAL}, ignore_index=True)
-   
-     return dffTabla2.to_dict('records')
-   
-
-#------------decorador tabla por Unidad rama ----------------
-@app.callback(
- Output(component_id='tabla3', component_property='data'),   
-Input(component_id='seleccionaUnidades', component_property='value')    
-)
-
-def update_table(seleccionaUnidades):
- 
-      
-     dffTabla3 = df[df['ADSCRIPCION']==(seleccionaUnidades)]
-     dffTabla3= dffTabla3.groupby(['RAMA']).size().reset_index(name='EN_PLANTILLA')
-     
-      # Calcula el total de la columna 'EN_PLANTILLA'
-     TOTAL = dffTabla3['EN_PLANTILLA'].sum()
-
-    # Agrega una fila al final de la tabla con el total
-     dffTabla3 = dffTabla3.append({'RAMA': 'TOTAL', 'EN_PLANTILLA': TOTAL}, ignore_index=True)
-
-     return dffTabla3.to_dict('records')
-
-
-#------------Decorador tabla unidad turno ----------------
-@app.callback(
- Output(component_id='tabla4', component_property='data'),   
-Input(component_id='seleccionaUnidades', component_property='value')    
-)
-
-def update_table(seleccionaUnidades):
- 
-      
-     dffTabla4 = df[df['ADSCRIPCION']==(seleccionaUnidades)]
-     dffTabla4= dffTabla4.groupby(['TURNO']).size().reset_index(name='EN_PLANTILLA')
-     
-     # Calcula el total de la columna 'EN_PLANTILLA'
-     TOTAL = dffTabla4['EN_PLANTILLA'].sum()
-
-    # Agrega una fila al final de la tabla con el total
-     dffTabla4 = dffTabla4.append({'TURNO': 'TOTAL', 'EN_PLANTILLA': TOTAL}, ignore_index=True)
-
-     return dffTabla4.to_dict('records')
-
+# Llamada a la función para generar el callback
+generate_callback('tabla', 'seleccionaUnidad','data','UNIDAD', 'RAMA')
+generate_callback('tabla2', 'seleccionaUnidad','data', 'UNIDAD','TURNO')
+generate_callback('tabla3', 'seleccionaUnidades','data', 'ADSCRIPCION','RAMA')
+generate_callback('tabla4', 'seleccionaUnidades','data', 'ADSCRIPCION','TURNO')
 
 #------------decorador tabla global rama ----------------
 @app.callback(
@@ -205,7 +128,6 @@ def update_table(seleccionaUnidades):
      return dffTabla6.to_dict('records')  
 
 #----------------------------------------------------------------------------
-
 
 #data table
 @app.callback(
@@ -247,11 +169,9 @@ def update_table(seleccionaUnidades):
             df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C120'][x] if not pd.isnull(x) else 0)
     else:   df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C0'][x] if not pd.isnull(x) else 0)
  
-    
     dffTabla = df[df['ADSCRIPCION']==(seleccionaUnidades)]
     dffTabla1x= dffTabla.groupby(['ADSCRIPCION','TURNO','NORMATIVA']).size().reset_index(name='EN_PLANTILLA')
     
-
         # Calcula el total de la columna 'EN_PLANTILLA'
     TOTAL = dffTabla1x['EN_PLANTILLA'].sum()
     TOTAL1= dffTabla1x['NORMATIVA'].sum()
@@ -259,19 +179,15 @@ def update_table(seleccionaUnidades):
     dffTabla1x =  dffTabla1x.append({'ADSCRIPCION': 'TOTAL', 'EN_PLANTILLA': TOTAL,  'NORMATIVA':TOTAL1}, ignore_index=True)
 
     return dffTabla1x.to_dict('records')
- 
- 
+  
   #DECORADOR TABLA3
-@app.callback(
+@app.callback(   
    
-   
-    Output(component_id='table3A', component_property='data'),
-    
+    Output(component_id='table3A', component_property='data'),    
     
     Input('table1X', 'derived_virtual_data'),     
     Input('table1X', 'derived_virtual_selected_rows'),
-    Input('table1X', 'selected_rows'),)
-     
+    Input('table1X', 'selected_rows'),)     
         
 def update_graphs(derived_virtual_data,derived_virtual_selected_rows,selected_rows):
     
@@ -299,8 +215,7 @@ def update_graphs(data):
                    
             d= df[(df['ADSCRIPCION'] ==dataf['ADSCRIPCION']) &  (df['TURNO'] ==dataf['TURNO']) ]
              
-            sjs= pd.DataFrame(d)
-           
+            sjs= pd.DataFrame(d)           
        
             return sjs.to_dict('records')
        
@@ -311,7 +226,7 @@ app.layout = html.Div([
         html.Div(className='header_title',     
             children=[
                 html.Img(src='assets/logo.png'),
-                html.Marquee(id='marquee', children = 'Hello! This can be used to show some notifications') ,
+                html.Marquee(id='marquee', children = 'Prevengamos las picaduras de mosquitos ¡no a la malaria!') ,
                 html.H1('DIRECCIÓN DE RECURSOS HUMANOS',),
                 html.H4('QNA 6/2023'),
                 html.Hr() ]
@@ -321,9 +236,7 @@ app.layout = html.Div([
         html.Div(children=[
             html.Label('Distribucion Global:', className='etiqueta'),
             create_table_simple('tabla6', 'UNIDAD', 'UNIDAD'), 
-            html.Hr(),
-            
-
+            html.Hr(),           
         ]),
 
         html.Div(className='dist_Unidad',
@@ -338,15 +251,13 @@ app.layout = html.Div([
                 value='HOSPITALES',
                 clearable=False,
                 searchable=False,
-                style={'backgroundColor': colors['background2'],'color': colors['text1'], 'font-size': 15, 'font-weight': 'bold'}),
+                style={'backgroundColor': colors['background2'], }),
        
-            ]),
+            ]),  
    
-   
-
     html.Div(className= 'distUnidadRama',
         children=[
-            dcc.Graph(id='the_graph1'),
+            dcc.Graph(id='the_graphRama'),
             create_table_simple('tabla', 'RAMA', 'RAMA')
         ],style= {'backgroundColor':  colors['background2'],'display':'flexbox'},
     ),
@@ -357,7 +268,6 @@ app.layout = html.Div([
         ]),
 
       ############################################## 
-
          
         html.Div([
                 html.Label('Seleccione una Adscripción:', className='etiqueta'),
@@ -366,21 +276,20 @@ app.layout = html.Div([
                 id='seleccionaUnidades',   
                 options=[],
                 multi=False,
-                style={'backgroundColor': colors['background2'],'color': colors['text1'], 'font-size': 15, 'font-weight': 'bold'})        
+                style={'backgroundColor': colors['background2'],})        
         ],style={'border-color': '#333', 'border-width': '2px', }),
 
         html.Div(className= 'distAdscripcionRama',
                  children=[             
                 dcc.Graph(id='theGraphUnidadRamas'),
-                create_table_simple('tabla3', 'RAMA', 'RAMA'),
-               
+                create_table_simple('tabla3', 'RAMA', 'RAMA'),               
         ]),
 
         html.Div(className= 'distAdscripcionTurno',
                  children=[     
          dcc.Graph(id='theGraphUnidadTurnos'), 
-         create_table_simple('tabla4', 'TURNO', 'TURNO'),
-        
+         create_table_simple('tabla4', 'TURNO', 'TURNO'),     
+
 #  compara la normativa contra la plantilla
 
         ]), 
@@ -394,8 +303,7 @@ html.Label('Comparación de Normativa VS Plantilla:', className='etiqueta'),
 html.Label('Analítico por Trabajador:', className='etiqueta'),              
 # tabla POR PERSONAS
 dash_table.DataTable(
-        id='table3A',
-      
+        id='table3A',      
        
         #data=df.to_dict('records'),
         #data = dffTabla1.to_dict('records'),
@@ -407,16 +315,13 @@ dash_table.DataTable(
 ),
 # Ulitma tabla sirve para mostrar el detalle de los trabajadores
 dash_table.DataTable(
-        id='table4A',
-      
+        id='table4A',      
      
         columns = [{'id':i, 'name':i, 'deletable':True,} for i in 
                    #SI SE LE PONE RFC DESGLOSA UNO A UNO CASO CONTRARIO ACUMULA
                    df.loc[:,['RFC','A.Paterno','A.Materno','Nombre','CÓDIGO','TIPO CONTRATO']]
-                     
-                   
-                   ],
-    
+                                        
+                   ],    
 
                 style_data={
               
@@ -436,7 +341,6 @@ dash_table.DataTable(
                             'fontWeight':'bold',
                             'border':'4px solid white',
                             'textAlign':'center'},
-
             
 )
 
@@ -445,8 +349,6 @@ dash_table.DataTable(
 ],className='contenedor')
 
 df.to_csv('modificado.csv')
-
-
 
 if __name__  == '__main__':
        app.run(host="0.0.0.0",port=8000,debug=True)

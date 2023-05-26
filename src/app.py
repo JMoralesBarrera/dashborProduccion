@@ -226,9 +226,9 @@ app.layout = html.Div([
         html.Div(className='header_title',     
             children=[
                 html.Img(src='assets/logo.png'),
-                html.Marquee(id='marquee', children = 'Prevengamos las picaduras de mosquitos ¡no a la malaria!') ,
+                html.Marquee(id='marquee', children = 'Cuidando tus pulmones, cuidas tu salud !Día mundial sin tabaco') ,
                 html.H1('DIRECCIÓN DE RECURSOS HUMANOS',),
-                html.H4('QNA 6/2023'),
+                html.H4('QNA 9/2023'),
                 html.Hr() ]
         ),
     
@@ -340,7 +340,7 @@ dash_table.DataTable(
             style_header = {'backgroundColor':'#000000',
                             'fontWeight':'bold',
                             'border':'4px solid white',
-                            'textAlign':'center'},
+                            'textAlign':'lefts'},
             
 )
 

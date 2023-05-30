@@ -14,6 +14,7 @@ import decorador_dropdown
 from func_crea_tabla_comparativa import crear_tabla_comparativa
 import dash_auth
 from tipo_hospital import tipo_hospital
+from hospitales import HOSPITALES
 
 # import dash_bootstrap_components as dbc
 LISTA_USUARIO =[['DIRECCION','A01'],['SUBDIRECCION','A02'],['JESUS','A03'],['JEFEDEPTO','A04']]
@@ -130,9 +131,7 @@ def update_table(seleccionaUnidades):
 
      return dffTabla6.to_dict('records')  
 
-#----------------------------------------------------------------------------
-
-
+#------------------------tabla comparativa------------------------------------
 @app.callback(
     Output(component_id='table1X', component_property='data'),
     Input(component_id='seleccionaUnidades', component_property='value')
@@ -140,17 +139,21 @@ def update_table(seleccionaUnidades):
 def update_table(seleccionaUnidades):
     # Inicializamos dffTabla1x como un DataFrame vacío
     dffTabla1x = pd.DataFrame()
+    
+    categoria_map = {
+        'C0': HOSPITALES['C0'],
+        'C30': HOSPITALES['C30'],
+        'C60': HOSPITALES['C60'],
+        'C90': HOSPITALES['C90'],
+    }
 
-    if seleccionaUnidades in ('HOSPITAL GENERAL DE APAN', 'HOSPITAL GENERAL DE ACTOPAN', 'HOSPITAL MATERNO INFANTIL', 'HOSPITAL GENERAL DE HUEJUTLA'):
-        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C60'][x] if not pd.isnull(x) else 0)
-    elif seleccionaUnidades in ('HOSPITAL GENERAL DE HUICHAPAN', 'HOSPITAL INTEGRAL DE JACALA', 'HOSPITAL ZIMAPAN'):
-        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C30'][x] if not pd.isnull(x) else 0)
-    elif seleccionaUnidades in ('HOSPITAL GENERAL DEL VALLE DEL MEZQUITAL IXMIQUILPAN', 'HOSPITAL GENERAL DE TULA'):
-        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C90'][x] if not pd.isnull(x) else 0)
-    elif seleccionaUnidades == 'HOSPITAL GENERAL TULANCINGO':
-        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C120'][x] if not pd.isnull(x) else 0)
+    # Verificar si seleccionaUnidades pertenece a alguna categoría
+    for categoria, hospitales in categoria_map.items():
+        if seleccionaUnidades in hospitales:
+            df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital[categoria][x] if not pd.isnull(x) else 0)
+            break
     else:
-        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C0'][x] if not pd.isnull(x) else 0)
+        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C120'][x] if not pd.isnull(x) else 0)
 
     dffTabla = df[df['ADSCRIPCION'] == seleccionaUnidades]
     dffTabla1x = dffTabla.groupby(['ADSCRIPCION', 'TURNO', 'NORMATIVA']).size().reset_index(name='EN_PLANTILLA')
@@ -163,6 +166,9 @@ def update_table(seleccionaUnidades):
     dffTabla1x = dffTabla1x.append({'ADSCRIPCION': 'TOTAL', 'EN_PLANTILLA': TOTAL, 'NORMATIVA': TOTAL1}, ignore_index=True)
 
     return dffTabla1x.to_dict('records')
+
+#---------------------------------------------------------------------------------
+
 
   #DECORADOR TABLA3
 @app.callback(   
@@ -182,7 +188,7 @@ def update_graphs(derived_virtual_data,derived_virtual_selected_rows,selected_ro
         df=pd.DataFrame(derived_virtual_data)
         df_filterd = df[df.index.isin(selected_rows)]
         return df_filterd.to_dict('records')
-   
+ #------------------------------------------------------------------------  
 #DECORADOR TABLA4
 @app.callback(
     Output(component_id='table4A', component_property='data'),
@@ -203,10 +209,10 @@ def update_graphs(data):
        
             return sjs.to_dict('records')
        
-#----------------------app.layout-------------------------
+#----------------------app.layout-----------------------------------------------------
 
 app.layout = html.Div([
-   #---------------------Create header--------------------------------------------------------   
+#---------------------Create header--------------------------------------------------------   
         html.Div(className='header_title',     
             children=[
                 html.Img(src='assets/logo.png'),
@@ -216,7 +222,7 @@ app.layout = html.Div([
                 html.Hr() ]
         ),
     
-#--------------------------tabla global secretaria----------------------------        
+#--------------------------tabla global secretaria-------------------------------------        
         html.Div(children=[
             html.Label('Distribucion Global:', className='etiqueta'),
             create_table_simple('tabla6', 'UNIDAD', 'UNIDAD'), 

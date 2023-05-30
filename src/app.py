@@ -13,6 +13,7 @@ from decorador_Grafico import *
 import decorador_dropdown
 from func_crea_tabla_comparativa import crear_tabla_comparativa
 import dash_auth
+from tipo_hospital import tipo_hospital
 
 # import dash_bootstrap_components as dbc
 LISTA_USUARIO =[['DIRECCION','A01'],['SUBDIRECCION','A02'],['JESUS','A03'],['JEFEDEPTO','A04']]
@@ -69,7 +70,7 @@ def set_cities_options(chosen_state1):
 def set_cities_options(chosen_state1):  
     return [k['value']for k in chosen_state1 ][0]
 
- #----------------Decorador gráfico -----------------------------------------
+#----------------Decorador gráfico -----------------------------------------
 def update_graph_pie(component_id_Output, component_id_Input, tipo ,columna_numero, columna_nombre, titulo):
     @app.callback(
         Output(component_id=component_id_Output, component_property='figure'),
@@ -80,6 +81,8 @@ def update_graph_pie(component_id_Output, component_id_Input, tipo ,columna_nume
     return update_graph
 
 # Uso de la función de actualización de gráfico para generar las funciones de devolución de llamada
+# Cada función de devolución de llamada generada está asociada a un componente de salida y una configuración específica para generar diferentes gráficos
+
 update_graph_pie1 = update_graph_pie('the_graphRama', 'seleccionaUnidad','UNIDAD','numeroRama', 'RAMA', 'Distribución Global por Ramas')
 update_graph_pie2 = update_graph_pie('the_graphTurnos','seleccionaUnidad', 'UNIDAD','numeroTurno', 'TURNO', 'Distribución Global por Turnos')
 update_graph_pie3 = update_graph_pie('theGraphUnidadRamas','seleccionaUnidades', 'ADSCRIPCION','numeroRama', 'RAMA', 'Distribución por Unidad  por Ramas')
@@ -129,57 +132,38 @@ def update_table(seleccionaUnidades):
 
 #----------------------------------------------------------------------------
 
-#data table
+
 @app.callback(
-Output(component_id='table1X', component_property='data'),
-Input(component_id='seleccionaUnidades', component_property='value')    
+    Output(component_id='table1X', component_property='data'),
+    Input(component_id='seleccionaUnidades', component_property='value')
 )
-
 def update_table(seleccionaUnidades):
-   
-    tipo_hospital={
-        
-        'C0':{'MATUTINA':0, 'VESPERTINA':0, 'VELADA A':0, 'VELADA B':0, 
-        'ESPECIAL DIURNA':0, 'ESPECIAL NOCTURNA':0, 'JORNADA ACUMULADA':0,'NO_DEFINIDO':0},
-
-        'C30':{'MATUTINA':72, 'VESPERTINA':29, 'VELADA A':9, 'VELADA B':8, 
-        'ESPECIAL DIURNA':10, 'ESPECIAL NOCTURNA':0, 'JORNADA ACUMULADA':0,'NO_DEFINIDO':0},
-
-        'C60':{'MATUTINA':123, 'VESPERTINA':56, 'VELADA A':31, 'VELADA B':29, 
-        'ESPECIAL DIURNA':30, 'ESPECIAL NOCTURNA':0, 'JORNADA ACUMULADA':0,'NO_DEFINIDO':0},
-
-        'C90':{'MATUTINA':229, 'VESPERTINA':115, 'VELADA A':60, 'VELADA B':46, 
-        'ESPECIAL DIURNA':36, 'ESPECIAL NOCTURNA':1, 'JORNADA ACUMULADA':0,'NO_DEFINIDO':0},
-
-        'C120':{'MATUTINA':269, 'VESPERTINA':144, 'VELADA A':71, 'VELADA B':64, 
-        'ESPECIAL DIURNA':44, 'ESPECIAL NOCTURNA':9, 'JORNADA ACUMULADA':0,'NO_DEFINIDO':0},
-
-        }
-   
     # Inicializamos dffTabla1x como un DataFrame vacío
     dffTabla1x = pd.DataFrame()
- 
-    if seleccionaUnidades in ('HOSPITAL GENERAL DE APAN','HOSPITAL GENERAL DE ACTOPAN','HOSPITAL MATERNO INFANTIL','HOSPITAL GENERAL DE HUEJUTLA'):        
-            df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C60'][x] if not pd.isnull(x) else 0)
+
+    if seleccionaUnidades in ('HOSPITAL GENERAL DE APAN', 'HOSPITAL GENERAL DE ACTOPAN', 'HOSPITAL MATERNO INFANTIL', 'HOSPITAL GENERAL DE HUEJUTLA'):
+        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C60'][x] if not pd.isnull(x) else 0)
     elif seleccionaUnidades in ('HOSPITAL GENERAL DE HUICHAPAN', 'HOSPITAL INTEGRAL DE JACALA', 'HOSPITAL ZIMAPAN'):
-            df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C30'][x] if not pd.isnull(x) else 0)
+        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C30'][x] if not pd.isnull(x) else 0)
     elif seleccionaUnidades in ('HOSPITAL GENERAL DEL VALLE DEL MEZQUITAL IXMIQUILPAN', 'HOSPITAL GENERAL DE TULA'):
-            df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C90'][x] if not pd.isnull(x) else 0)
+        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C90'][x] if not pd.isnull(x) else 0)
     elif seleccionaUnidades == 'HOSPITAL GENERAL TULANCINGO':
-            df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C120'][x] if not pd.isnull(x) else 0)
-    else:   df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C0'][x] if not pd.isnull(x) else 0)
- 
-    dffTabla = df[df['ADSCRIPCION']==(seleccionaUnidades)]
-    dffTabla1x= dffTabla.groupby(['ADSCRIPCION','TURNO','NORMATIVA']).size().reset_index(name='EN_PLANTILLA')
-    
-        # Calcula el total de la columna 'EN_PLANTILLA'
+        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C120'][x] if not pd.isnull(x) else 0)
+    else:
+        df['NORMATIVA'] = df['TURNO'].apply(lambda x: tipo_hospital['C0'][x] if not pd.isnull(x) else 0)
+
+    dffTabla = df[df['ADSCRIPCION'] == seleccionaUnidades]
+    dffTabla1x = dffTabla.groupby(['ADSCRIPCION', 'TURNO', 'NORMATIVA']).size().reset_index(name='EN_PLANTILLA')
+
+    # Calcula el total de la columna 'EN_PLANTILLA'
     TOTAL = dffTabla1x['EN_PLANTILLA'].sum()
-    TOTAL1= dffTabla1x['NORMATIVA'].sum()
+    TOTAL1 = dffTabla1x['NORMATIVA'].sum()
+
     # Agrega una fila al final de la tabla con el total
-    dffTabla1x =  dffTabla1x.append({'ADSCRIPCION': 'TOTAL', 'EN_PLANTILLA': TOTAL,  'NORMATIVA':TOTAL1}, ignore_index=True)
+    dffTabla1x = dffTabla1x.append({'ADSCRIPCION': 'TOTAL', 'EN_PLANTILLA': TOTAL, 'NORMATIVA': TOTAL1}, ignore_index=True)
 
     return dffTabla1x.to_dict('records')
-  
+
   #DECORADOR TABLA3
 @app.callback(   
    

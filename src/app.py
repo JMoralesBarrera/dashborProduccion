@@ -302,6 +302,7 @@ html.Label('Comparación de Normativa VS Plantilla:', className='etiqueta'),
 
 html.Label('Analítico por Trabajador:', className='etiqueta'),              
 # tabla POR PERSONAS
+
 dash_table.DataTable(
         id='table3A',      
        
@@ -313,7 +314,7 @@ dash_table.DataTable(
     
             
 ),
-# Ulitma tabla sirve para mostrar el detalle de los trabajadores
+# Ultima tabla sirve para mostrar el detalle de los trabajadores
 dash_table.DataTable(
         id='table4A',      
      
